@@ -1,122 +1,81 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from "react";
+import "./index.css";
+
+const API_KEY = "9ef53148"; 
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [busca, setBusca] = useState("");
+  const [filmes, setFilmes] = useState([]);
+  const [erro, setErro] = useState("");
+  const [carregando, setCarregando] = useState(false);
+
+  async function buscarFilmes() {
+    if (!busca.trim()) return;
+
+    setCarregando(true);
+    setErro("");
+    setFilmes([]);
+
+    try {
+      const resposta = await fetch(
+        `https://www.omdbapi.com/?s=${busca}&apikey=${API_KEY}`
+      );
+      const dados = await resposta.json();
+
+      if (dados.Response === "True") {
+        setFilmes(dados.Search);
+      } else {
+        setErro("Nenhum filme encontrado. Tente outro nome.");
+      }
+    } catch (e) {
+      setErro("Erro ao buscar filmes. Tente novamente.");
+    }
+
+    setCarregando(false);
+  }
+
+  function handleTecla(e) {
+    if (e.key === "Enter") buscarFilmes();
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="container">
+      <h1>🎬 Buscador de Filmes</h1>
 
-      <div className="ticks"></div>
+      <div className="busca">
+        <input
+          type="text"
+          placeholder="Digite o nome de um filme..."
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          onKeyDown={handleTecla}
+        />
+        <button onClick={buscarFilmes}>Buscar</button>
+      </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      {carregando && <p className="carregando">Buscando filmes...</p>}
+      {erro && <p className="erro">{erro}</p>}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <div className="filmes">
+        {filmes.map((filme) => (
+          <div key={filme.imdbID} className="card">
+            <img
+              src={
+                filme.Poster !== "N/A"
+                  ? filme.Poster
+                  : "https://via.placeholder.com/180x260?text=Sem+imagem"
+              }
+              alt={filme.Title}
+            />
+            <div className="card-info">
+              <h3>{filme.Title}</h3>
+              <p>{filme.Year}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
